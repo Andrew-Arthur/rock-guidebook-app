@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+
+  postedWallImages WallImage[]
+  Details          Details[]
+}
+
+model Area {
+  id         Int @id @default(autoincrement())
+  waypointID Int
+  detailsID  Int
+
+  details  Details     @relation(fields: [detailsID], references: [id])
+  waypoint Waypoint    @relation(fields: [waypointID], references: [id])
+  images   AreaImage[]
+  walls    Wall[]
+}
+
+model Wall {
+  id         Int @id @default(autoincrement())
+  waypointID Int
+  areaID     Int
+  detailsID  Int
+
+  details  Details     @relation(fields: [detailsID], references: [id])
+  waypoint Waypoint    @relation(fields: [waypointID], references: [id])
+  area     Area        @relation(fields: [areaID], references: [id])
+  routes   Route[]
+  images   WallImage[]
+}
+
+model Route {
+  id        Int    @id @default(autoincrement())
+  grade     String
+  rating    Int
+  wallID    Int
+  detailsID Int
+
+  details Details    @relation(fields: [detailsID], references: [id])
+  wall    Wall       @relation(fields: [wallID], references: [id])
+  svgs    RouteSVG[]
+}
+
+model Waypoint {
+  id        Int     @id @default(autoincrement())
+  latitude  Decimal
+  longitude Decimal
+  Area      Area[]
+  Wall      Wall[]
+}
+
+model Details {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  createdByID Int
+  createdBy   User     @relation(fields: [createdByID], references: [id])
+  createdOn   DateTime @default(now())
+  Area        Area[]
+  Wall        Wall[]
+  Route       Route[]
+}
+
+model GCSImage {
+  id        Int         @id @default(autoincrement())
+  url       String
+  WallImage WallImage[]
+  AreaImage AreaImage[]
+}
+
+model WallImage {
+  id     Int @id @default(autoincrement())
+  wallID Int
+  gcsID  Int
+  userID Int
+
+  wall      Wall       @relation(fields: [wallID], references: [id])
+  gcsImage  GCSImage   @relation(fields: [gcsID], references: [id])
+  user      User       @relation(fields: [userID], references: [id])
+  routeSVGs RouteSVG[]
+}
+
+model RouteSVG {
+  id          Int @id @default(autoincrement())
+  routeID     Int
+  wallImageID Int
+
+  data Json // or String
+
+  route     Route     @relation(fields: [routeID], references: [id])
+  wallImage WallImage @relation(fields: [wallImageID], references: [id])
+}
+
+model AreaImage {
+  id     Int @id @default(autoincrement())
+  areaID Int
+  gcsID  Int
+
+  area     Area     @relation(fields: [areaID], references: [id])
+  gcsImage GCSImage @relation(fields: [gcsID], references: [id])
+}
