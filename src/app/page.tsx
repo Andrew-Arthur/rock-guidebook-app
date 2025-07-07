@@ -3,7 +3,7 @@ import Login from '@/components/LoginButton'
 import SessionWrapper from '@/components/SessionWrapper'
 
 import { IArea } from "@/lib/models/IArea"
-import { IWall } from "@/lib/models/IWall";
+import { IWall } from "@/lib/models/IWall"
 import { fetchAreaById, fetchWallById } from "@/lib/repositories/areaRepository"
 
 import { getServerSession } from "next-auth"
@@ -29,6 +29,7 @@ export default async function Page({ searchParams }: PageProps) {
                     <h1 className="text-2xl font-header">Rock Guidebook</h1>
                 </div>
                 <div className="ml-auto">
+                    <button className="bg-white hover:bg-gray-400 text-black font-bold py-2 px-3 rounded-full mr-1">✎</button>
                     <Login/>
                 </div>
             </header>

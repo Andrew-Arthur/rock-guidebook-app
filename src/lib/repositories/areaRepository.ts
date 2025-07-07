@@ -3,7 +3,7 @@ import { IArea } from "@/lib/models/IArea"
 import { IWall } from "@/lib/models/IWall"
 
 export async function fetchAreaById(areaID: string): Promise<IArea | null> {
-    let area: IArea | null = null;
+    let area: IArea | null = null
     if (areaID === '1') {
         area = {
             id: '1',
@@ -122,7 +122,7 @@ export async function fetchWallById(areaID: string, wallID: string): Promise<IWa
                     [1910, 450],
                     [2000, 300],
                 ],
-                },
+            },
             {
                 id: '5',
                 name: 'Cro Magnen',

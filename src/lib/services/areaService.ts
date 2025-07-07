@@ -1,5 +1,5 @@
-import { FeatureCollection, Point } from "geojson";
-import { IArea } from "../models/IArea";
+import { FeatureCollection, Point } from "geojson"
+import { IArea } from "../models/IArea"
 
 export function getWallsGeoJson(area: IArea): FeatureCollection<Point, { id: string, name: string }> {
     return {
@@ -14,5 +14,5 @@ export function getWallsGeoJson(area: IArea): FeatureCollection<Point, { id: str
                 id: wall.id, name: wall.name,
             },
         })),
-    };
+    }
 }

@@ -1,4 +1,4 @@
-import { IWallPreview } from './IWallPreview';
+import { IWallPreview } from './IWallPreview'
 
 export interface IArea {
     id: string

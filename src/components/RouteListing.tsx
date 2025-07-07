@@ -1,5 +1,5 @@
-import { IRoute } from "@/lib/models/IRoute";
-import { useEffect, useState } from "react";
+import { IRoute } from "@/lib/models/IRoute"
+import { useEffect, useState } from "react"
 
 export default function RouteListing({
     route,

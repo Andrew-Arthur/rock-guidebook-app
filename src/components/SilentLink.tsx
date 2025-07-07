@@ -10,21 +10,21 @@ interface SilentLinkProps {
 }
 
 export function SilentLink({
-  href,
-  scroll = true,
-  ariaLabel,
-  children
+    href,
+    scroll = true,
+    ariaLabel,
+    children
 }: PropsWithChildren<SilentLinkProps>) {
-  const onClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault()
-    window.history.pushState(null, '', href)
-    if (scroll) window.scrollTo(0, 0)
-    window.dispatchEvent(new PopStateEvent('popstate'))
-  }
+    const onClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault()
+        window.history.pushState(null, '', href)
+        if (scroll) window.scrollTo(0, 0)
+        window.dispatchEvent(new PopStateEvent('popstate'))
+    }
 
-  return (
-    <a href={href} onClick={onClick} aria-label={ariaLabel}>
-      {children}
-    </a>
-  )
+    return (
+        <a href={href} onClick={onClick} aria-label={ariaLabel}>
+            {children}
+        </a>
+    )
 }
