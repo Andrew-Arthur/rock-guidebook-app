@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:17
+    container_name: pg
+    restart: unless-stopped
+    init: true
+    env_file: .env
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: UTC
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    image: node:22-alpine
+    container_name: nextjs
+    restart: unless-stopped
+    init: true
+    working_dir: /app
+    env_file: .env
+    environment:
+      WATCHPACK_POLLING: "true"
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+        corepack enable &&
+        (pnpm i --frozen-lockfile || npm ci) &&
+        npx prisma generate &&
+        npm run dev -- -p 3000
+      "
+
+volumes:
+  pg_data:
