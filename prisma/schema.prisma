@@ -27,8 +27,8 @@ model Area {
   waypointID Int
   detailsID  Int
 
-  details  Details     @relation(fields: [detailsID], references: [id])
-  waypoint Waypoint    @relation(fields: [waypointID], references: [id])
+  details  Details     @relation(fields: [detailsID], references: [id], onDelete: Cascade)
+  waypoint Waypoint    @relation(fields: [waypointID], references: [id], onDelete: Cascade)
   images   AreaImage[]
   walls    Wall[]
 }
@@ -39,9 +39,9 @@ model Wall {
   areaID     Int
   detailsID  Int
 
-  details  Details     @relation(fields: [detailsID], references: [id])
-  waypoint Waypoint    @relation(fields: [waypointID], references: [id])
-  area     Area        @relation(fields: [areaID], references: [id])
+  details  Details     @relation(fields: [detailsID], references: [id], onDelete: Cascade)
+  waypoint Waypoint    @relation(fields: [waypointID], references: [id], onDelete: Cascade)
+  area     Area        @relation(fields: [areaID], references: [id], onDelete: Cascade)
   routes   Route[]
   images   WallImage[]
 }
@@ -53,8 +53,8 @@ model Route {
   wallID    Int
   detailsID Int
 
-  details Details    @relation(fields: [detailsID], references: [id])
-  wall    Wall       @relation(fields: [wallID], references: [id])
+  details Details    @relation(fields: [detailsID], references: [id], onDelete: Cascade)
+  wall    Wall       @relation(fields: [wallID], references: [id], onDelete: Cascade)
   svgs    RouteSVG[]
 }
 
@@ -71,6 +71,7 @@ model Details {
   name        String
   description String
   createdByID Int
+
   createdBy   User     @relation(fields: [createdByID], references: [id])
   createdOn   DateTime @default(now())
   Area        Area[]
@@ -91,8 +92,8 @@ model WallImage {
   gcsID  Int
   userID Int
 
-  wall      Wall       @relation(fields: [wallID], references: [id])
-  gcsImage  GCSImage   @relation(fields: [gcsID], references: [id])
+  wall      Wall       @relation(fields: [wallID], references: [id], onDelete: Cascade)
+  gcsImage  GCSImage   @relation(fields: [gcsID], references: [id], onDelete: Cascade)
   user      User       @relation(fields: [userID], references: [id])
   routeSVGs RouteSVG[]
 }
@@ -104,8 +105,8 @@ model RouteSVG {
 
   data Json // or String
 
-  route     Route     @relation(fields: [routeID], references: [id])
-  wallImage WallImage @relation(fields: [wallImageID], references: [id])
+  route     Route     @relation(fields: [routeID], references: [id], onDelete: Cascade)
+  wallImage WallImage @relation(fields: [wallImageID], references: [id], onDelete: Cascade)
 }
 
 model AreaImage {
@@ -113,6 +114,6 @@ model AreaImage {
   areaID Int
   gcsID  Int
 
-  area     Area     @relation(fields: [areaID], references: [id])
-  gcsImage GCSImage @relation(fields: [gcsID], references: [id])
+  area     Area     @relation(fields: [areaID], references: [id], onDelete: Cascade)
+  gcsImage GCSImage @relation(fields: [gcsID], references: [id], onDelete: Cascade)
 }

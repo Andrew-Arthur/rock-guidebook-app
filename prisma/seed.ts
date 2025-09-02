@@ -3,16 +3,35 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-    const user = await prisma.user.create({
-        data: {
-            username: 'john_doe',
-            password: 'securepassword',
+    const userData = {
+        username: 'john_doe',
+        password: 'securepassword',
+    }
+    const user = await prisma.user.upsert({
+        where: { username: userData.username },
+        update: {
+            password: userData.password,
+        },
+        create: {
+            username: userData.username,
+            password: userData.password,
         }
     })
+    const areaData = {
+        name: 'Tonkawa Falls Park‎‎‎',
+        description: 'A beautiful park with a waterfall and climbing routes.',
+    }
+    const oldArea = await prisma.area.findFirst({
+        where: { details: { name: areaData.name } },
+        select: { id: true }
+    })
+    if (oldArea) {
+        await prisma.area.delete({ where: { id: oldArea.id } })
+    }
     const areaDetails = await prisma.details.create({
         data: {
-            name: 'Tonkawa Falls Park',
-            description: 'A beautiful park with a waterfall and climbing routes.',
+            name: areaData.name,
+            description: areaData.description,
             createdByID: user.id,
         }
     })
@@ -30,7 +49,7 @@ async function main() {
     })
     const wallsData = [
         {
-            name: 'Craw Cave',
+            name: 'Craw Cave‎‎‎',
             location: [-97.43064880733091, 31.53628283766936],
             description: 'Descend the stairs behind the pavilion and follow the trail along the wall until you come to a large cave with a stone bench. This is Craw Cave, the classic cave of Tonk. The classic route is Cromagination v10, which has many shorter variations for all experience levels.',
         },
@@ -45,6 +64,7 @@ async function main() {
             description: 'A popular climbing wall with various routes.',
         },
     ]
+    let wallCrawCave
     for (const wallData of wallsData) {
         const wallWaypoint = await prisma.waypoint.create({
             data: {
@@ -59,11 +79,51 @@ async function main() {
                 createdByID: user.id,
             }
         })
-        await prisma.wall.create({
+        const wall = await prisma.wall.create({
             data: {
                 waypointID: wallWaypoint.id,
                 detailsID: wallDetails.id,
                 areaID: area.id,
+            }
+        })
+        if (wallData.name === 'Craw Cave‎‎‎') {
+            wallCrawCave = wall
+        }
+    }
+    const routesData = [
+        {
+            name: 'La Salida',
+            description: 'A challenging route in Craw Cave.',
+            grade: 'V2',
+            rating: 1,
+            svg: [
+                [100, 550],
+                [150, 450],
+                [250, 400],
+            ]
+        }
+    ]
+    for (const routeData of routesData) {
+        const routeDetails = await prisma.details.create({
+            data: {
+                name: routeData.name,
+                description: routeData.description,
+                createdByID: user.id,
+            }
+        })
+        const route = await prisma.route.create({
+            data: {
+                grade: routeData.grade,
+                rating: routeData.rating,
+                wallID: wallCrawCave!.id,
+                detailsID: routeDetails.id,
+            }
+        })
+        await prisma.routeSVG.create({
+            data: {
+                routeID: route.id,
+                wallImageID: wallCrawCave!.id,
+                data: routeData.svg,
             }
         })
     }
