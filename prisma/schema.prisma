@@ -29,6 +29,7 @@ model Area {
 
   details  Details     @relation(fields: [detailsID], references: [id], onDelete: Cascade)
   waypoint Waypoint    @relation(fields: [waypointID], references: [id], onDelete: Cascade)
+  
   images   AreaImage[]
   walls    Wall[]
 }
@@ -50,6 +51,7 @@ model Route {
   id        Int    @id @default(autoincrement())
   grade     String
   rating    Int
+
   wallID    Int
   detailsID Int
 
@@ -74,16 +76,18 @@ model Details {
 
   createdBy   User     @relation(fields: [createdByID], references: [id])
   createdOn   DateTime @default(now())
+
   Area        Area[]
   Wall        Wall[]
   Route       Route[]
 }
 
 model GCSImage {
-  id        Int         @id @default(autoincrement())
-  url       String
-  WallImage WallImage[]
-  AreaImage AreaImage[]
+  id         Int         @id @default(autoincrement())
+  objectName String
+    
+  WallImage  WallImage[]
+  AreaImage  AreaImage[]
 }
 
 model WallImage {

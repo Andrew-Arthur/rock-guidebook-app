@@ -1,30 +1,26 @@
-'use client'
+"use client"
 
 import React, { useEffect, useRef } from "react"
-import { IArea } from "@/lib/models/IArea"
 import { usePathname, useSearchParams } from "next/navigation"
 import mapboxgl, { GeoJSONFeature } from "mapbox-gl"
-import { getWallsGeoJson } from "@/lib/services/areaService"
-import { getMapGeoJson } from "@/services/mapService"
+import { getMapGeoJson } from "@/services/mapGeoJsonService"
+import { AreaEntity } from "@/lib/types"
+import { getAreaGeoJson } from "@/services/areaGeoJsonService"
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!
 
 interface MapProps {
-  area: IArea | null
-  hoveredWallId: string | null
-  setHoveredWallId: (id: string | null) => void
+    area: AreaEntity | null
+    hoveredWallId: number | null
+    setHoveredWallId: (id: number | null) => void
 }
 
-export default function Map({
-    area = null,
-    hoveredWallId,
-    setHoveredWallId,
-}: MapProps) {
+export default function Map({ area = null, hoveredWallId, setHoveredWallId }: MapProps) {
     const mapContainer = useRef<HTMLDivElement>(null)
     const mapRef = useRef<mapboxgl.Map | null>(null)
     const pathname = usePathname()
     const searchParams = useSearchParams()
-  
+
     const hoveredFeatureRef = useRef<GeoJSONFeature | null>(null)
 
     // first render only
@@ -45,33 +41,33 @@ export default function Map({
         setHoveredFeatureByWallID(hoveredWallId)
     }, [hoveredWallId])
 
-    return <div ref={mapContainer} className="h-full w-full flex-2/3"></div>
+    return <div ref={mapContainer} className="h-[100vh] w-full flex-2/3 -mt-8"></div>
 
     function getCenter(): [number, number] {
-        return (area) ? [area.location.longitude, area.location.latitude] : [-97.43095, 31.53701]
+        return area ? [area.waypoint.longitude, area.waypoint.latitude] : [-97.43095, 31.53701]
     }
     function getZoom(): number {
-        return (area) ? 18 : 6
+        return area ? 18 : 6
     }
     function getSpeed(): number {
-        return (area) ? 1.2 : 3
+        return area ? 1.2 : 3
     }
     function initMap() {
         if (mapRef.current) return
         const map = new mapboxgl.Map({
             container: mapContainer.current!,
-            style: 'mapbox://styles/mapbox/satellite-streets-v11',
+            style: "mapbox://styles/mapbox/satellite-streets-v11",
             center: getCenter(),
-            zoom:   getZoom(),
+            zoom: getZoom(),
         })
         mapRef.current = map
-        map.addControl(new mapboxgl.NavigationControl(), 'top-left')
-        map.on('load', () => {
+        map.addControl(new mapboxgl.NavigationControl(), "top-left")
+        map.on("load", () => {
             map.addSource("dem", {
                 type: "raster-dem",
                 url: "mapbox://mapbox.mapbox-terrain-dem-v1",
                 tileSize: 512,
-                maxzoom: 14
+                maxzoom: 14,
             })
             map.setTerrain({ source: "dem", exaggeration: 1.5 })
             if (!area) {
@@ -86,127 +82,138 @@ export default function Map({
     }
     async function loadAreas() {
         const map = mapRef.current!
-        if (map.getLayer('areas-layer')) return
+        if (map.getLayer("areas-layer")) return
 
         const geoJson = await getMapGeoJson()
 
-        map.addSource('areas', { type: 'geojson', data: geoJson })
+        map.addSource("areas", { type: "geojson", data: geoJson })
         map.addLayer({
-            id: 'areas-layer',
-            type: 'circle',
-            source: 'areas',
+            id: "areas-layer",
+            type: "circle",
+            source: "areas",
             layout: {
-                'circle-sort-key': 2
+                "circle-sort-key": 2,
             },
             paint: {
-                'circle-color': '#e55e5e',
-                'circle-radius': 8,
-                'circle-stroke-color': '#fff',
-                'circle-stroke-width': 2,
+                "circle-color": "#e55e5e",
+                "circle-radius": 8,
+                "circle-stroke-color": "#fff",
+                "circle-stroke-width": 2,
             },
         })
         map.addLayer({
-            id: 'areas-layer-count',
-            type: 'symbol',
-            source: 'areas',
+            id: "areas-layer-count",
+            type: "symbol",
+            source: "areas",
             layout: {
-                'text-field': ['to-string', ['get', 'routeCount']],
-                'text-size': 12,
-                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                'text-anchor': 'center',
-                'text-offset': [0, 0],
+                "text-field": ["to-string", ["get", "routeCount"]],
+                "text-size": 12,
+                "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+                "text-anchor": "center",
+                "text-offset": [0, 0],
             },
             paint: {
-                'text-color': '#fff',
-                'text-halo-color': '#000',
-                'text-halo-width': 1,
+                "text-color": "#fff",
+                "text-halo-color": "#000",
+                "text-halo-width": 1,
             },
         })
-        map.on('mouseenter', 'areas-layer', () => {
-            map.getCanvas().style.cursor = 'pointer'
+        map.on("mouseenter", "areas-layer", () => {
+            map.getCanvas().style.cursor = "pointer"
         })
-        map.on('mouseleave', 'areas-layer', () => {
-            map.getCanvas().style.cursor = ''
+        map.on("mouseleave", "areas-layer", () => {
+            map.getCanvas().style.cursor = ""
         })
-        map.on('click', 'areas-layer', (e) => {
+        map.on("click", "areas-layer", (e) => {
             const feature = e.features![0]!
             const id = feature.properties?.id
             const params = new URLSearchParams(searchParams.toString())
-            params.set('area', id)
-            window.history.pushState(null, '', pathname + '?' + params.toString())
+            params.set("area", id)
+            window.history.pushState(null, "", pathname + "?" + params.toString())
         })
     }
     function loadWalls() {
         const map = mapRef.current!
-        if (map.getLayer('walls-layer')) return
+        if (map.getLayer("walls-layer")) return
+        if (!area) return
 
-        map.addSource('walls', {
-            type: 'geojson',
-            data: getWallsGeoJson(area!),
-            promoteId: 'id'
+        map.addSource("walls", {
+            type: "geojson",
+            data: getAreaGeoJson(area),
+            promoteId: "id",
         })
         map.addLayer({
-            id: 'walls-layer',
-            type: 'circle',
-            source: 'walls',
+            id: "walls-layer",
+            type: "circle",
+            source: "walls",
             layout: {
-                'circle-sort-key': 1
+                "circle-sort-key": 1,
             },
             paint: {
-                'circle-color':        ['case', ['boolean', ['feature-state', 'hover'], false], '#E19015', '#E9CA3F'],
-                'circle-radius':       8,
-                'circle-stroke-color': ['case', ['boolean', ['feature-state', 'hover'], false], '#E19015', '#E9CA3F'],
-                'circle-stroke-width': 2,
-                'circle-opacity':      0.6,
+                "circle-color": [
+                    "case",
+                    ["boolean", ["feature-state", "hover"], false],
+                    "#E19015",
+                    "#E9CA3F",
+                ],
+                "circle-radius": 8,
+                "circle-stroke-color": [
+                    "case",
+                    ["boolean", ["feature-state", "hover"], false],
+                    "#E19015",
+                    "#E9CA3F",
+                ],
+                "circle-stroke-width": 2,
+                "circle-opacity": 0.6,
             },
         })
-    
-        map.on('mouseenter', 'walls-layer', (e) => {
+
+        map.on("mouseenter", "walls-layer", (e) => {
             const feature = e.features![0]!
-            setHoveredWallId(feature.id as string | null)
-            map.getCanvas().style.cursor = 'pointer'
+            setHoveredWallId(feature.id as number)
+            map.getCanvas().style.cursor = "pointer"
         })
-        map.on('mouseleave', 'walls-layer', () => {
+        map.on("mouseleave", "walls-layer", () => {
             setHoveredWallId(null)
-            map.getCanvas().style.cursor = ''
+            map.getCanvas().style.cursor = ""
         })
-        map.on('click', 'walls-layer', (e) => {
+        map.on("click", "walls-layer", (e) => {
             const feature = e.features![0]!
             const id = feature.properties?.id
-      
+
             const params = new URLSearchParams(searchParams.toString())
-            params.set('wall', id)
-            window.history.pushState(null, '', pathname + '?' + params.toString())
+            params.set("wall", id)
+            window.history.pushState(null, "", pathname + "?" + params.toString())
         })
 
-        map.getLayer('walls-layer')
+        map.getLayer("walls-layer")
     }
     async function viewAllAreas() {
         const map = mapRef.current!
-        if (!map.getLayer('areas-layer')) await loadAreas()
+        if (!map.getLayer("areas-layer")) await loadAreas()
         map.resize()
-        map.setLayoutProperty('areas-layer', 'visibility', 'visible')
-        map.setLayoutProperty('areas-layer-count', 'visibility', 'visible')
+        map.setLayoutProperty("areas-layer", "visibility", "visible")
+        map.setLayoutProperty("areas-layer-count", "visibility", "visible")
         flyToPoint()
-        map.once('moveend', () => {
-            map.setLayoutProperty('walls-layer', 'visibility', 'none')
+        map.once("moveend", () => {
+            map.setLayoutProperty("walls-layer", "visibility", "none")
         })
     }
     function viewSpecificArea() {
         const map = mapRef.current!
-        if (!map.getLayer('walls-layer')) loadWalls()
+        if (!map.getLayer("walls-layer")) loadWalls()
         map.resize()
-        map.setLayoutProperty('walls-layer', 'visibility', 'visible')
-        map.setLayoutProperty('areas-layer', 'visibility', 'none')
-        map.setLayoutProperty('areas-layer-count', 'visibility', 'none')
+        map.setLayoutProperty("walls-layer", "visibility", "visible")
+        map.setLayoutProperty("areas-layer", "visibility", "none")
+        map.setLayoutProperty("areas-layer-count", "visibility", "none")
         flyToPoint()
     }
     function flyToPoint() {
-    mapRef.current!.flyTo({ 
-        center: getCenter(), 
-        zoom:   getZoom(),
-        speed:  getSpeed(),
-    })
+        mapRef.current!.flyTo({
+            center: getCenter(),
+            zoom: getZoom(),
+            speed: getSpeed(),
+        })
     }
     function setHoveredFeature(feature: GeoJSONFeature | null) {
         const map = mapRef.current!
@@ -219,16 +226,12 @@ export default function Map({
         }
         hoveredFeatureRef.current = feature
     }
-    function setHoveredFeatureByWallID(id: string | null) {
-        const feature = (id) ? mapRef.current!.queryRenderedFeatures({ filter: ['==', 'id', id] })[0] : null
+    function setHoveredFeatureByWallID(id: number | null) {
+        const feature = id
+            ? mapRef.current!.queryRenderedFeatures({
+                  filter: ["==", "id", id],
+              })[0]
+            : null
         return setHoveredFeature(feature)
     }
 }
-
-
-
-
- 
-
-
-

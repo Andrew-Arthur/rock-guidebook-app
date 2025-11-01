@@ -9,7 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.17.0",
     "@prisma/client": "6.15.0",
+    "@radix-ui/themes": "^3.2.1",
+    "lucide-react": "^0.544.0",
     "mapbox-gl": "^3.11.1",
     "next": "^15.3.1",
     "next-auth": "^4.24.11",

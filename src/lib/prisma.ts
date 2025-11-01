@@ -1,13 +1,42 @@
-import { PrismaClient } from '@prisma/client'
+import "server-only"
+import { PrismaClient } from "@prisma/client"
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+function makePrisma() {
+    const base = new PrismaClient()
+    return base.$extends({
+        result: {
+            waypoint: {
+                latitude: {
+                    needs: { latitude: true },
+                    compute(w) {
+                        return w.latitude.toNumber()
+                    },
+                },
+                longitude: {
+                    needs: { longitude: true },
+                    compute(w) {
+                        return w.longitude.toNumber()
+                    },
+                },
+            },
+            routeSVG: {
+                data: {
+                    needs: { data: true },
+                    compute(w) {
+                        return w.data as [number, number][]
+                    },
+                },
+            },
+        },
+    })
 }
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-      log: ['query'],
-  })
+declare global {
+    var prisma: ReturnType<typeof makePrisma> | undefined
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+export const prisma = globalThis.prisma ?? makePrisma()
+
+if (process.env.NODE_ENV !== "production") {
+    globalThis.prisma = prisma
+}

@@ -1,5 +1,8 @@
-import { IRoute } from "@/lib/models/IRoute"
+import { RouteEntity } from "@/lib/types"
 import { useEffect, useState } from "react"
+import ToggleInput from "./ToggleInput"
+import { Route as PathIcon, PencilRuler } from "lucide-react"
+import { Box, Button, Flex, Heading, IconButton, Separator, Text } from "@radix-ui/themes"
 
 export default function RouteListing({
     route,
@@ -7,63 +10,105 @@ export default function RouteListing({
     setHoveredRouteId,
     selectedRouteId,
     setSelectedRouteId,
+    editing,
+    addMode = false,
 }: {
-    route: IRoute
-    hoveredRouteId: string | null
-    setHoveredRouteId: (id: string | null) => void
-    selectedRouteId: string | null
-    setSelectedRouteId: (id: string | null) => void
+    route: RouteEntity
+    hoveredRouteId: number
+    setHoveredRouteId: (id: number) => void
+    selectedRouteId: number
+    setSelectedRouteId: (id: number) => void
+    editing: boolean
+    addMode?: boolean
 }) {
-    const hovered = hoveredRouteId === route.id
-    const selected = selectedRouteId === route.id
+    const hovered = hoveredRouteId === route?.id
+    const selected = selectedRouteId === route?.id
     const [showVideo, setShowVideo] = useState<boolean>(false)
+    const [editMode, setEditMode] = useState<boolean>(addMode)
 
     useEffect(() => {
-        if (!selected) setShowVideo(false)
+        if (!editing) setEditMode(false)
+    }, [editing])
+
+    useEffect(() => {
+        if (!selected) {
+            setShowVideo(false)
+            setEditMode(false)
+        }
     }, [selected])
-    
+
+    if (!route) return null
+
     return (
-        <div className="w-full border-b-1 border-gray-300">
-            <div
-                className={`p-3 flex justify-between ${hovered ? 'bg-gray-200' : ''}`}
-                onMouseEnter={() => setHoveredRouteId(route.id)}
-                onMouseLeave={() => setHoveredRouteId(null)}
-                onClick={() => setSelectedRouteId(selected ? null : route.id)}
-            >
-                <div className="space-x-3">
-                    <span className="border-r-1 border-gray-300 pr-3">{route.grade}</span>
-                    <span>{route.name}</span>
-                </div>
-                <div className="space-x-3">
-                    <span>{'★'.repeat(route.rating) + '☆'.repeat(5 - route.rating)}</span>
-                    <a className="cursor-pointer">{selected ? '▲' : '▼'}</a>
-                </div>
-            </div>
-            {selected && (
-                <div className="p-3">
-                    {showVideo && (
-                        <iframe
-                            className="w-full h-64"
-                            src={`https://www.youtube.com/embed/${route.video}`}
-                            title="YouTube video player"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                        ></iframe>
-                    )}
-                    <div className="flex justify-between">
-                        <span className="font-bold">Description:</span>
-                        {route.video && (
-                            <img
-                                className="w-4 h-4 cursor-pointer"
-                                src="/youtube.png"
-                                alt="Video"
-                                onClick={() => { setShowVideo(!showVideo) }}
-                            />
+        <Flex
+            direction="column"
+            asChild
+            width="100%"
+            p="3"
+            gap="3"
+            className={`${hovered && !selected ? "bg-black/20" : ""}`}
+            onMouseEnter={() => setHoveredRouteId(route.id)}
+            onMouseLeave={() => setHoveredRouteId(NaN)}
+            onClick={() => !editMode && setSelectedRouteId(selected ? NaN : route.id)}
+        >
+            <form className="w-full">
+                <Flex justify="between">
+                    <Flex gap="3" align="center">
+                        <ToggleInput name="grade" value={route.grade} edit={editMode} />
+                        <Separator size="1" orientation="vertical" />
+                        <ToggleInput name="name" value={route.details.name} edit={editMode} />
+                    </Flex>
+                    <Flex gap="3">
+                        {editing && (
+                            <IconButton
+                                type="button"
+                                size="1"
+                                radius="full"
+                                onClick={(event) => {
+                                    if (editMode) {
+                                    } else {
+                                        event.stopPropagation()
+                                        setEditMode(true)
+                                        setSelectedRouteId(route.id)
+                                    }
+                                }}
+                            >
+                                {editMode ? (
+                                    <PathIcon className="w-5 h-5" />
+                                ) : (
+                                    <PencilRuler className="w-5 h-5" />
+                                )}
+                            </IconButton>
                         )}
-                    </div>
-                    {route.description}
-                </div>
-            )}
-        </div>
+                        <Text>{"★".repeat(route.rating) + "☆".repeat(5 - route.rating)}</Text>
+                        <Text>{selected ? "▲" : "▼"}</Text>
+                    </Flex>
+                </Flex>
+                {selected && (
+                    <Box>
+                        <Heading size="3">Description:</Heading>
+                        <ToggleInput
+                            name="description"
+                            value={route.details.description}
+                            edit={editMode}
+                            multiline
+                        />
+                    </Box>
+                )}
+                {editMode && (
+                    <Flex justify="end" gap="2">
+                        <Button type="button" color="gray" onClick={() => setEditMode(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="button" color="red">
+                            Delete
+                        </Button>
+                        <Button type="submit" color="green">
+                            Save
+                        </Button>
+                    </Flex>
+                )}
+            </form>
+        </Flex>
     )
 }

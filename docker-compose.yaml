@@ -1,93 +1,117 @@
 services:
-  db:
-    image: postgres:17
-    container_name: pg
-    restart: unless-stopped
-    init: true
-    env_file: .env
-    environment:
-      PGDATA: /var/lib/postgresql/data/pgdata
-      TZ: UTC
-    ports:
-      - "5432:5432"
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    db:
+        image: postgres:17
+        container_name: pg
+        restart: unless-stopped
+        init: true
+        env_file:
+            - .env
+            - .env.docker
+        environment:
+            PGDATA: /var/lib/postgresql/data/pgdata
+            TZ: UTC
+        ports:
+            - "5432:5432"
+        volumes:
+            - pg_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
 
-  # One-shot job: install deps, generate client, run migrations, seed, then exit 0
-  migrate:
-    image: node:22-alpine
-    container_name: migrate
-    restart: "no"
-    init: true
-    working_dir: /app
-    env_file: .env
-    volumes:
-      - .:/app
-      - /app/node_modules
-    depends_on:
-      db:
-        condition: service_healthy
-    command: >
-      sh -c '
-        set -euo pipefail
-        corepack enable
+    # One-shot job: install deps, generate client, run migrations, seed, then exit 0
+    migrate:
+        image: node:22-alpine
+        container_name: migrate
+        restart: "no"
+        init: true
+        working_dir: /app
+        env_file:
+            - .env
+            - .env.docker
+        volumes:
+            - .:/app
+            - /app/node_modules
+        depends_on:
+            db:
+                condition: service_healthy
+        command: >
+            sh -c '
+              set -euo pipefail
+              corepack enable
 
-        # Install deps respecting your lockfile
-        if [ -f pnpm-lock.yaml ]; then
-          pnpm i --frozen-lockfile
-        elif [ -f package-lock.json ]; then
-          npm ci || npm i
-        else
-          npm i
-        fi
+              # Install deps respecting your lockfile
+              if [ -f pnpm-lock.yaml ]; then
+                pnpm i --frozen-lockfile
+              elif [ -f package-lock.json ]; then
+                npm ci || npm i
+              else
+                npm i
+              fi
 
-        npx prisma generate
+              npx prisma generate
 
-        # If NO migrations exist, create an initial one (write-only)
-        if [ ! -d prisma/migrations ] || [ -z "$(ls -A prisma/migrations 2>/dev/null)" ]; then
-          echo "No migrations found -> creating initial migration"
-          npx prisma migrate dev --name init --create-only
-        fi
+              # If NO migrations exist, create an initial one (write-only)
+              if [ ! -d prisma/migrations ] || [ -z "$(ls -A prisma/migrations 2>/dev/null)" ]; then
+                echo "No migrations found -> creating initial migration"
+                npx prisma migrate dev --name init --create-only
+              fi
 
-        # Apply all migrations
-        npx prisma migrate deploy
+              # Apply all migrations
+              npx prisma migrate deploy
 
-        # Seed via Prisma (will run ts-node because package.json defines prisma.seed)
-        npx prisma db seed || echo "No seed configured or seeding failed; continuing"
-      '
+              # Seed via Prisma (will run ts-node because package.json defines prisma.seed)
+              npx prisma db seed || echo "No seed configured or seeding failed; continuing"
+            '
 
-  web:
-    image: node:22-alpine
-    container_name: nextjs
-    restart: unless-stopped
-    init: true
-    working_dir: /app
-    env_file: .env
-    environment:
-      WATCHPACK_POLLING: "true"
-      PORT: "3000"
-    ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    depends_on:
-      db:
-        condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
-    command: >
-      sh -c "
-        corepack enable &&
-        (pnpm i --frozen-lockfile || npm ci) &&
-        npx prisma generate &&
-        npm run dev -- -p 3000
-      "
+    web:
+        image: node:22-alpine
+        container_name: nextjs
+        restart: unless-stopped
+        init: true
+        working_dir: /app
+        env_file:
+            - .env
+            - .env.local
+            - .env.docker
+        environment:
+            WATCHPACK_POLLING: "true"
+            PORT: "3000"
+        ports:
+            - "3000:3000"
+        volumes:
+            - .:/app
+            - /app/node_modules
+        depends_on:
+            db:
+                condition: service_healthy
+            migrate:
+                condition: service_completed_successfully
+        command: >
+            sh -c "
+              corepack enable &&
+              (pnpm i --frozen-lockfile || npm ci) &&
+              npx prisma generate &&
+              npm run dev -- -p 3000
+            "
 
+    gcs:
+        image: fsouza/fake-gcs-server:latest
+        command:
+            [
+                "-scheme",
+                "http",
+                "-port",
+                "4443",
+                "-public-host",
+                "localhost:4443",
+                "-data",
+                "/storage",
+            ]
+        ports:
+            - "4443:4443"
+        volumes:
+            - ./local-gcs:/storage
 volumes:
-  pg_data:
+    pg_data:
