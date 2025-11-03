@@ -6,6 +6,7 @@ services:
         init: true
         env_file:
             - .env
+            - .env.local
             - .env.docker
         environment:
             PGDATA: /var/lib/postgresql/data/pgdata

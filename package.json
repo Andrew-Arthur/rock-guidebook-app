@@ -16,7 +16,6 @@
     "mapbox-gl": "^3.11.1",
     "next": "^15.3.1",
     "next-auth": "^4.24.11",
-    "prisma": "6.15.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
@@ -31,7 +30,7 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.5.1",
     "prettier": "^3.6.2",
-    "prisma": "6.15.0",
+    "prisma": "^6.15.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.0"

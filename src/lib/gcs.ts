@@ -1,5 +1,5 @@
 // lib/gcs.ts
-import { Storage } from "@google-cloud/storage"
+import { Storage, StorageOptions } from "@google-cloud/storage"
 import { randomUUID } from "crypto"
 
 let storage: Storage
@@ -7,30 +7,24 @@ let storage: Storage
 export function getStorage() {
     if (storage) return storage
 
-    if (process.env.GCP_SA_KEY_BASE64) {
-        // Decode and parse the base64-encoded JSON key
-        const key = JSON.parse(
-            Buffer.from(process.env.GCP_SA_KEY_BASE64, "base64").toString("utf8"),
-        )
-        storage = new Storage({
-            projectId: key.project_id,
-            credentials: {
-                client_email: key.client_email,
-                private_key: key.private_key,
-            },
-        })
-    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-        // Local dev path (points to downloaded JSON file)
-        storage = new Storage({
-            keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-            projectId: process.env.GCP_PROJECT_ID,
-        })
-    } else {
-        // Fallback: use ADC (Application Default Credentials) if on GCP infra
-        storage = new Storage()
+    const opts: StorageOptions = {
+        projectId: process.env.GCP_PROJECT_ID,
     }
 
-    return storage
+    const emulatorRaw = process.env.GCS_EMULATOR_HOST
+    const isEmulator = !!emulatorRaw
+
+    const credentialsFile = process.env.GOOGLE_APPLICATION_CREDENTIALS
+    const isRealGCP = !!credentialsFile
+
+    if (isEmulator) {
+        opts.apiEndpoint = emulatorRaw
+        opts.useAuthWithCustomEndpoint = false
+    } else if (isRealGCP) {
+        opts.keyFilename = credentialsFile
+    }
+
+    return (storage = new Storage(opts))
 }
 
 export async function uploadImage(file: File): Promise<string> {
