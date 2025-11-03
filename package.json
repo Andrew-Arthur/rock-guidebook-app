@@ -1,41 +1,42 @@
 {
-  "name": "rock-guidebook-app",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@google-cloud/storage": "^7.17.0",
-    "@prisma/client": "6.15.0",
-    "@radix-ui/themes": "^3.2.1",
-    "lucide-react": "^0.544.0",
-    "mapbox-gl": "^3.11.1",
-    "next": "^15.3.1",
-    "next-auth": "^4.24.11",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
-  },
-  "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9.30.1",
-    "eslint-config-next": "15.3.1",
-    "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-prettier": "^5.5.1",
-    "prettier": "^3.6.2",
-    "prisma": "^6.15.0",
-    "tailwindcss": "^4",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.5.0"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
-  }
+    "name": "rock-guidebook-app",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "setup": "node -e \"const fs=require('fs'); if(!fs.existsSync('.env.local')) fs.copyFileSync('.env.local.example','.env.local'); console.log('Created .env.local from example (if missing).');\"",
+        "dev": "next dev --turbopack",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint"
+    },
+    "dependencies": {
+        "@google-cloud/storage": "^7.17.0",
+        "@prisma/client": "6.15.0",
+        "@radix-ui/themes": "^3.2.1",
+        "lucide-react": "^0.544.0",
+        "mapbox-gl": "^3.11.1",
+        "next": "^15.3.1",
+        "next-auth": "^4.24.11",
+        "react": "^19.1.1",
+        "react-dom": "^19.1.1"
+    },
+    "devDependencies": {
+        "@eslint/eslintrc": "^3",
+        "@tailwindcss/postcss": "^4",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "eslint": "^9.30.1",
+        "eslint-config-next": "15.3.1",
+        "eslint-config-prettier": "^10.1.5",
+        "eslint-plugin-prettier": "^5.5.1",
+        "prettier": "^3.6.2",
+        "prisma": "^6.15.0",
+        "tailwindcss": "^4",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.5.0"
+    },
+    "prisma": {
+        "seed": "ts-node prisma/seed.ts"
+    }
 }
