@@ -2,15 +2,17 @@
 
 ## Setup
 
-### Copy Local Env Template
+### 1. Copy Local Env Template
 
 ```bash
 npm run setup
 ```
 
-### Add mapbox private key to .env.local
+### 2. Add mapbox private key to .env.local
 
-### Run docker
+[Mapbox Console](https://console.mapbox.com/)
+
+### 3. Run docker
 
 ```bash
 docker compose up
